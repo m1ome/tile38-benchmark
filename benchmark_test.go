@@ -11,12 +11,15 @@ func connection() *redis.Client {
 	})
 }
 
+const Lat = 50.005
+const Lon = 50.005
+
 func benchmarkNearby(b *testing.B, postfix string) {
 	connection := connection()
 	b.ResetTimer()
 
 	for n :=0; n < b.N; n++ {
-		cmd := redis.NewStringCmd("NEARBY", "benchmark-" + postfix, "POINT", "100.001", "100.001", "1000")
+		cmd := redis.NewStringCmd("NEARBY", "benchmark-" + postfix, "POINT", Lat, Lon, "1000")
 		connection.Process(cmd)
 	}
 
@@ -28,7 +31,7 @@ func benchmarkNearbyWithLimitAndDistance(b *testing.B, postfix string) {
 	b.ResetTimer()
 
 	for n :=0; n < b.N; n++ {
-		cmd := redis.NewStringCmd("NEARBY", "benchmark-" + postfix, "LIMIT", 100, "DISTANCE", "POINT", "100.001", "100.001", "1000")
+		cmd := redis.NewStringCmd("NEARBY", "benchmark-" + postfix, "LIMIT", 100, "DISTANCE", "POINT", Lat, Lon, "1000")
 		connection.Process(cmd)
 	}
 
@@ -40,7 +43,7 @@ func benchmarkNearbyWithLimit(b *testing.B, postfix string) {
 	b.ResetTimer()
 
 	for n :=0; n < b.N; n++ {
-		cmd := redis.NewStringCmd("NEARBY", "benchmark-" + postfix, "LIMIT", 100, "POINT", "100.001", "100.001", "1000")
+		cmd := redis.NewStringCmd("NEARBY", "benchmark-" + postfix, "LIMIT", 100, "POINT", Lat, Lon, "1000")
 		connection.Process(cmd)
 	}
 

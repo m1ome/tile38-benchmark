@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 
 	redis "gopkg.in/redis.v5"
 )
@@ -25,11 +26,17 @@ func main() {
 }
 
 
+func randPosition(minLat, minLon, maxLat, maxLon float64) (float64, float64) {
+	lat, lon := (rand.Float64()*(maxLat-minLat))+minLat, (rand.Float64()*(maxLon-minLon))+minLon
+	return lat, lon
+}
+
 func generatePoints(client *redis.Client, count int, postfix string) {
 	fmt.Printf("We will generate %d points\n", count)
 
 	for i := 0; i < count; i++ {
-		cmd := redis.NewStringCmd("SET", "benchmark-" + postfix, i, "POINT", 100, 100)
+		lat, lon := randPosition(50.001, 50.001, 50.01, 50.01)
+		cmd := redis.NewStringCmd("SET", "benchmark-" + postfix, i, "POINT", lat, lon)
 		client.Process(cmd)
 
 		fmt.Printf("Progress: %d/%d\n", i + 1, count)
