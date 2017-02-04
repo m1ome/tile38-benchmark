@@ -16,6 +16,7 @@ type ReporterOptions struct {
 
 type Reporter interface {
 	AddReport(opts ReporterOptions) error
+	Footer() error
 }
 
 

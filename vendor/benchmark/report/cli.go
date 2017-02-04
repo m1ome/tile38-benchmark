@@ -43,3 +43,11 @@ func (r *CLIReporter) AddReport(options ReporterOptions) error {
 
 	return nil
 }
+
+func (r *CLIReporter) Footer() error {
+	fmt.Println("====== END ======")
+	fmt.Println("Benchmark finished")
+	fmt.Println()
+
+	return nil
+}

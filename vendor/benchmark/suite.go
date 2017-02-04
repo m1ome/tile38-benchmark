@@ -25,6 +25,8 @@ func Run(tests map[string]suite.Runner, opts BenchmarkOptions) {
 
 		opts.Reporter.AddReport(options)
 	}
+
+	opts.Reporter.Footer()
 }
 
 func command(runner suite.Runner, conn connection.Connector, keepalive bool, clients int, requests uint64) report.ReporterOptions {
