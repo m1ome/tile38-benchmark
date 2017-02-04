@@ -21,6 +21,7 @@ func main() {
 		Reporter: reporter,
 		Requests: 10000,
 		Clients: 30,
+		Keepalive: true,
 	}
 
 	benchmark.Run(runners, options)

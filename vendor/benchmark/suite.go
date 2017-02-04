@@ -38,14 +38,18 @@ func command(runner suite.Runner, conn connection.Connector, keepalive bool, cli
 	var elapsed time.Duration
 	for i := 0; i < clients; i++ {
 		go func() {
-			c, err := conn.Dial()
-			if err != nil {
-				fmt.Printf("Connection error: %s\n", err)
-				os.Exit(1)
+			var c connection.ConnectorReadWriter
+			var err error
+
+			if keepalive {
+				c, err = conn.Dial()
+				if err != nil {
+					fmt.Printf("Connection error: %s\n", err)
+					os.Exit(1)
+				}
 			}
 
 			for {
-				var err error
 				mu.Lock()
 				if done >= requests {
 					mu.Unlock()
@@ -53,6 +57,15 @@ func command(runner suite.Runner, conn connection.Connector, keepalive bool, cli
 				}
 				done++
 				mu.Unlock()
+
+				// Establish connection if not keepalive
+				if !keepalive {
+					c, err = conn.Dial()
+					if err != nil {
+						fmt.Printf("Connection error: %s\n", err)
+						os.Exit(1)
+					}
+				}
 
 				t := time.Now()
 				err = runner.Fire(c)
@@ -64,12 +77,14 @@ func command(runner suite.Runner, conn connection.Connector, keepalive bool, cli
 
 				if err != nil {
 					fmt.Printf("Fire error: %s\n", err.Error())
+					c.Close()
 					os.Exit(1)
 				}
 
 				err = runner.Match(c)
 				if err != nil {
 					fmt.Printf("Match error: %s\n", err.Error())
+					c.Close()
 					os.Exit(1)
 				}
 
@@ -83,9 +98,16 @@ func command(runner suite.Runner, conn connection.Connector, keepalive bool, cli
 				}
 				timing[r]++
 				mu.Unlock()
+
+				if !keepalive {
+					c.Close()
+				}
 			}
 
-			c.Close()
+			if keepalive {
+				c.Close()
+			}
+
 			wg.Done()
 		}()
 	}
