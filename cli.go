@@ -2,12 +2,26 @@ package main
 
 import (
 	"benchmark"
+	"benchmark/connection"
+	"benchmark/report"
+	"benchmark/suite"
 )
 
 func main() {
-	opts := benchmark.SuiteOptions{Keepalive: false}
+	runners := make(map[string]suite.Runner)
 
-	s := benchmark.NewSuite(opts)
-	s.Run()
+	runners["GET"] = &suite.GetCommand{}
+	runners["SET(POINT)"] = &suite.SetCommand{}
 
+	conn := connection.NewTCPConnection("127.0.0.1:9851")
+	reporter := report.NewCLIReporter()
+
+	options := benchmark.BenchmarkOptions{
+		Connection: conn,
+		Reporter: reporter,
+		Requests: 10000,
+		Clients: 30,
+	}
+
+	benchmark.Run(runners, options)
 }
