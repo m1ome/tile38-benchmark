@@ -4,13 +4,33 @@ import (
 	"benchmark/connection"
 	"fmt"
 	"errors"
+	"benchmark/helpers"
+	"math/rand"
 )
 
-type SetCommand struct {}
+const testPrefixSet = "set"
+
+type SetCommand struct {
+	T GeoType
+}
 
 func (c *SetCommand) Fire(conn connection.ConnectorReadWriter) error {
-	lat, lon := randomPointCoordinates()
-	command := fmt.Sprintf("SET fleet truck POINT %f %f", lat, lon)
+	var command string
+
+	switch c.T {
+	case Point:
+		lat, lon := helpers.RandomPointCoordinates()
+		command = fmt.Sprintf("SET %s %s_%d POINT %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat, lon)
+	case Geohash:
+		lat, lon := helpers.RandomPointCoordinates()
+		command = fmt.Sprintf("SET %s %s_%d POINT %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat, lon)
+	case Object:
+		lat, lon := helpers.RandomPointCoordinates()
+		command = fmt.Sprintf("SET %s %s_%d OBJECT %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat, lon)
+	case Bounds:
+		lat, lon := helpers.RandomPointCoordinates()
+		command = fmt.Sprintf("SET %s %s_%d POINT %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat, lon)
+	}
 
 	return conn.Write(command)
 }
@@ -26,5 +46,13 @@ func  (c *SetCommand) Match(conn connection.ConnectorReadWriter) error {
 		return errors.New("Empty response from Tile38 server")
 	}
 
+	return nil
+}
+
+func (c *SetCommand) Up(conn connection.ConnectorReadWriter) error {
+	return nil
+}
+
+func (c *SetCommand) Down(conn connection.ConnectorReadWriter) error {
 	return nil
 }

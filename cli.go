@@ -20,6 +20,7 @@ func main() {
 	requests := flag.Uint64("requests", 100000, "Number of requires will be send totall for each benchmark")
 	clients := flag.Int("clients", 50, "Number of clients will be connected for each benchmark")
 	keepalive := flag.Bool("keepalive", true, "Keep connection alive")
+	flush := flag.Bool("flush", false, "Flush DB before running benchmark")
 	flag.Parse()
 
 	if *requests < 1 {
@@ -34,8 +35,14 @@ func main() {
 
 	runners := make(map[string]suite.Runner)
 
-	runners["GET"] = &suite.GetCommand{}
-	runners["SET(POINT)"] = &suite.SetCommand{}
+	// Get command
+	runners["GET(OBJECT)"] = &suite.GetCommand{suite.Object}
+	runners["GET(POINT)"] = &suite.GetCommand{suite.Point}
+	runners["GET(BOUNDS)"] = &suite.GetCommand{suite.Bounds}
+	runners["GET(HASH)"] = &suite.GetCommand{suite.Geohash}
+
+	// Set command
+	runners["SET(POINT)"] = &suite.SetCommand{suite.Point}
 
 	conn := connection.NewTCPConnection(*connectionString)
 	reporter := report.NewCLIReporter()
@@ -46,6 +53,7 @@ func main() {
 		Requests: *requests,
 		Clients: *clients,
 		Keepalive: *keepalive,
+		Flush: *flush,
 	}
 
 	benchmark.Run(runners, options)

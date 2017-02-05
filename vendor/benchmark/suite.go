@@ -8,6 +8,7 @@ import (
 	"time"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type BenchmarkOptions struct {
@@ -16,14 +17,47 @@ type BenchmarkOptions struct {
 	Keepalive bool
 	Clients int
 	Requests uint64
+	Flush bool
 }
 
 func Run(tests map[string]suite.Runner, opts BenchmarkOptions) {
+	conn, err := opts.Connection.Dial()
+	defer conn.Close()
+
+	if err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	if opts.Flush {
+		fmt.Println("Flushing database")
+
+		err = conn.Write("FLUSHDB")
+		if err != nil {
+			fmt.Printf("Error(flush): %s", err.Error())
+			os.Exit(1)
+		}
+
+		m, err := conn.Read()
+		if err != nil {
+			fmt.Printf("Error(flush): %s", err.Error())
+			os.Exit(1)
+		}
+
+		if !strings.Contains(string(m), "\"ok\":true") {
+			fmt.Printf("Error: %s", string(m))
+			os.Exit(1)
+		}
+	}
+
 	for name, runner := range tests {
+		runner.Up(conn)
+
 		options := command(runner, opts.Connection, opts.Keepalive, opts.Clients, opts.Requests)
 		options.Name = name
-
 		opts.Reporter.AddReport(options)
+
+		runner.Down(conn)
 	}
 
 	opts.Reporter.Footer()
