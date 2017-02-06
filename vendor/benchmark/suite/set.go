@@ -22,14 +22,14 @@ func (c *SetCommand) Fire(conn connection.ConnectorReadWriter) error {
 		lat, lon := helpers.RandomPointCoordinates()
 		command = fmt.Sprintf("SET %s %s_%d POINT %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat, lon)
 	case Geohash:
-		lat, lon := helpers.RandomPointCoordinates()
-		command = fmt.Sprintf("SET %s %s_%d POINT %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat, lon)
+		hash, _ := helpers.RandomHashCoordinates()
+		command = fmt.Sprintf("SET %s %s_%d HASH %s %d", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), hash, 10)
 	case Object:
-		lat, lon := helpers.RandomPointCoordinates()
-		command = fmt.Sprintf("SET %s %s_%d OBJECT %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat, lon)
+		json := helpers.RandomJsonCoordinates()
+		command = fmt.Sprintf("SET %s %s_%d OBJECT %s", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), json)
 	case Bounds:
-		lat, lon := helpers.RandomPointCoordinates()
-		command = fmt.Sprintf("SET %s %s_%d POINT %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat, lon)
+		lat1, lon1, lat2, lon2 := helpers.RandomBoundsCoordinates()
+		command = fmt.Sprintf("SET %s %s_%d POINT %f %f %f %f", BenchmarkPrefix, testPrefixSet, rand.Intn(1000), lat1, lon1, lat2, lon2)
 	}
 
 	return conn.Write(command)

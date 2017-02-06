@@ -4,10 +4,10 @@ import (
 	"benchmark"
 	"benchmark/connection"
 	"benchmark/report"
-	"benchmark/suite"
 	"flag"
 	"fmt"
 	"os"
+	"benchmark/suite"
 )
 
 func main() {
@@ -21,6 +21,7 @@ func main() {
 	clients := flag.Int("clients", 50, "Number of clients will be connected for each benchmark")
 	keepalive := flag.Bool("keepalive", true, "Keep connection alive")
 	flush := flag.Bool("flush", false, "Flush DB before running benchmark")
+	tests := flag.String("tests", "", "Tests we should run in e.g. set, get and e.t.c.")
 	flag.Parse()
 
 	if *requests < 1 {
@@ -33,16 +34,21 @@ func main() {
 		os.Exit(1)
 	}
 
+
 	runners := make(map[string]suite.Runner)
+	if *tests == "" {
+		// Get command
+		runners["GET(OBJECT)"] = &suite.GetCommand{suite.Object}
+		runners["GET(POINT)"] = &suite.GetCommand{suite.Point}
+		runners["GET(BOUNDS)"] = &suite.GetCommand{suite.Bounds}
+		runners["GET(HASH)"] = &suite.GetCommand{suite.Geohash}
 
-	// Get command
-	runners["GET(OBJECT)"] = &suite.GetCommand{suite.Object}
-	runners["GET(POINT)"] = &suite.GetCommand{suite.Point}
-	runners["GET(BOUNDS)"] = &suite.GetCommand{suite.Bounds}
-	runners["GET(HASH)"] = &suite.GetCommand{suite.Geohash}
-
-	// Set command
-	runners["SET(POINT)"] = &suite.SetCommand{suite.Point}
+		// Set command
+		runners["SET(POINT)"] = &suite.SetCommand{suite.Point}
+		runners["SET(OBJECT)"] = &suite.SetCommand{suite.Object}
+		runners["SET(BOUNDS)"] = &suite.SetCommand{suite.Bounds}
+		runners["SET(HASH)"] = &suite.SetCommand{suite.Geohash}
+	}
 
 	conn := connection.NewTCPConnection(*connectionString)
 	reporter := report.NewCLIReporter()
